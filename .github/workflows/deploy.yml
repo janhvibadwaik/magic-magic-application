@@ -2,7 +2,7 @@ name: Deploy To S3
 
 on:
     push:
-        branches:
+        branches: 
             - "*"
 
 jobs:
@@ -27,11 +27,17 @@ jobs:
             - name: AWS Credentials Configure
               uses: aws-actions/configure-aws-credentials@v1
               with:
-                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: 'ap-south-1'
 
             - name: Push to S3
-              run: aws s3 sync . s3://magic-magic-aplication --delete
+              run: |
+                # First sync non-JS/CSS files
+                aws s3 sync ./dist s3://magic-magic-aplication --delete --exclude "*.js" --exclude "*.css"
                 
-            
+                # Then sync JS files with correct content type
+                aws s3 sync ./dist s3://magic-magic-aplication --include "*.js" --content-type "application/javascript"
+                
+                # Then sync CSS files with correct content type
+                aws s3 sync ./dist s3://magic-magic-aplication --include "*.css" --content-type "text/css"
